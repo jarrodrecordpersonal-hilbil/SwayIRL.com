@@ -1,0 +1,3 @@
+import { database } from "@/lib/server";
+export const dynamic="force-dynamic";
+export async function GET(){try{const db=database();const result=await db.prepare(`SELECT s.id,s.name,s.city,s.state,s.type,s.description FROM stores s WHERE s.status='published' AND s.capacity>(SELECT COUNT(*) FROM requests r WHERE r.store_id=s.id AND r.status='confirmed') ORDER BY s.state,s.city,s.name`).all();return Response.json({stores:result.results},{headers:{"Cache-Control":"public, max-age=60"}})}catch(e){console.error("public_open_retailers_failed",e);return Response.json({stores:[]},{status:503})}}
