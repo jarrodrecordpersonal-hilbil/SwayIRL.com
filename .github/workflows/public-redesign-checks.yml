@@ -16,6 +16,9 @@ jobs:
   build-and-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
     env:
       CI: 'true'
       NEXT_TELEMETRY_DISABLED: '1'
@@ -35,6 +38,12 @@ jobs:
           mkdir -p qa-artifacts
           git rev-parse HEAD | tee qa-artifacts/tested-sha.txt
           node --version | tee qa-artifacts/node-version.txt
+      - name: Verify logged failures cannot become successful pipelines
+        run: |
+          if bash -euo pipefail -c 'node -e "process.exit(7)" | tee /dev/null'; then
+            echo 'Failure propagation is broken'
+            exit 1
+          fi
       - name: Install pinned project dependencies without changing the lockfile
         run: |
           npm install --global pnpm@11.25.0
@@ -73,6 +82,7 @@ jobs:
           NODE
       - name: Start built worker and run real browser checks
         run: |
+          set -euo pipefail
           pnpm run start --port 8787 > qa-artifacts/worker.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
@@ -83,7 +93,15 @@ jobs:
             sleep 2
           done
           if [ "$READY" -ne 1 ]; then cat qa-artifacts/worker.log; echo 'Built worker did not become ready'; exit 1; fi
-          node tests/browser/public-smoke.mjs | tee qa-artifacts/browser.log
+          node tests/browser/public-smoke.mjs 2>&1 | tee qa-artifacts/browser.log
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync('qa-artifacts/browser-results.json', 'utf8'));
+          assert.ok(report.results.length >= 56, 'Browser report is incomplete');
+          assert.ok(report.results.every(result => result.passed === true), 'Browser report contains a failure');
+          assert.deepEqual(report.runtimeErrors, []);
+          NODE
       - name: Preserve evidence even on failure
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
