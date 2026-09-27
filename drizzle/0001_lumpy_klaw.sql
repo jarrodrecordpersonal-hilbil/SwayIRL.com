@@ -1,0 +1,1 @@
+ALTER TABLE `partners` ADD `application` text DEFAULT '{}' NOT NULL;
