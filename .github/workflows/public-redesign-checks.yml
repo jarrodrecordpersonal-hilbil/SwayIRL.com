@@ -93,6 +93,7 @@ jobs:
             sleep 2
           done
           if [ "$READY" -ne 1 ]; then cat qa-artifacts/worker.log; echo 'Built worker did not become ready'; exit 1; fi
+          node tests/browser/header-logo.mjs 2>&1 | tee qa-artifacts/header.log
           node tests/browser/public-smoke.mjs 2>&1 | tee qa-artifacts/browser.log
           node --input-type=module <<'NODE'
           import assert from 'node:assert/strict';
@@ -101,6 +102,9 @@ jobs:
           assert.ok(report.results.length >= 56, 'Browser report is incomplete');
           assert.ok(report.results.every(result => result.passed === true), 'Browser report contains a failure');
           assert.deepEqual(report.runtimeErrors, []);
+          const headers = JSON.parse(fs.readFileSync('qa-artifacts/header-results.json', 'utf8'));
+          assert.equal(headers.length, 9);
+          assert.ok(headers.every(result => result.passed === true));
           NODE
       - name: Preserve evidence even on failure
         if: ${{ !cancelled() }}
