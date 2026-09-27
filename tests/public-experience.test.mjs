@@ -45,7 +45,7 @@ test('all four public sales sheets have full proposed terms and exact lookup', (
   assert.equal(new Set(salesSheets.map(s => s.slug)).size, 4);
   for (const sheet of salesSheets) {
     assert.equal(findSalesSheet(sheet.slug), sheet);
-    assert.equal(sheet.benefits.length, 3);
+    assert.equal(sheet.benefits.length, 4);
     assert.equal(sheet.steps.length, 3);
     assert.ok(salesPitch(sheet).includes(sheet.terms));
   }
