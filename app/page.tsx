@@ -1,2 +1,2 @@
-import { MarketingPage } from "./marketing";
-export default function Home() { return <MarketingPage />; }
+import { HomeExperience } from "./public-experience";
+export default function Home() { return <HomeExperience />; }
