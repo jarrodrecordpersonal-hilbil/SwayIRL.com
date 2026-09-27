@@ -1,0 +1,94 @@
+name: Public redesign checks
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-redesign-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_CF_FETCH_ENABLED: 'false'
+      SWAY_QA_BASE_URL: http://127.0.0.1:8787
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Record exact source under test
+        run: |
+          mkdir -p qa-artifacts
+          git rev-parse HEAD | tee qa-artifacts/tested-sha.txt
+          node --version | tee qa-artifacts/node-version.txt
+      - name: Install pinned project dependencies without changing the lockfile
+        run: |
+          npm install --global pnpm@11.25.0
+          pnpm --version
+          pnpm install --frozen-lockfile
+          git diff --exit-code -- package.json pnpm-lock.yaml pnpm-workspace.yaml
+      - name: Full repository TypeScript check
+        run: pnpm exec tsc --noEmit
+      - name: Existing workspace and public inventory tests
+        run: node --experimental-sqlite --test tests/*.test.mjs
+      - name: Build actual Vinext application
+        run: pnpm run build
+      - name: Install isolated pinned browser tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/sway-browser-tools" --ignore-scripts --package-lock=false playwright@1.56.1
+          node "$RUNNER_TEMP/sway-browser-tools/node_modules/playwright/cli.js" install --with-deps chromium
+          echo "PLAYWRIGHT_MODULE=$RUNNER_TEMP/sway-browser-tools/node_modules/playwright/index.mjs" >> "$GITHUB_ENV"
+      - name: Initialize local-only database with test fixtures
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          import { spawnSync } from 'node:child_process';
+          assert.equal(process.env.CI, 'true');
+          assert.ok(!process.env.CLOUDFLARE_API_TOKEN, 'QA must not use Cloudflare credentials');
+          const config = 'dist/server/wrangler.json';
+          const parsed = JSON.parse(fs.readFileSync(config, 'utf8'));
+          const binding = parsed.d1_databases?.find(database => database.binding === 'DB');
+          assert.equal(binding?.database_id, '00000000-0000-4000-8000-000000000000', 'Expected local placeholder DB');
+          const migrations = fs.readdirSync('drizzle').filter(file => file.endsWith('.sql')).sort().map(file => `drizzle/${file}`);
+          assert.ok(migrations.length, 'No migrations found');
+          for (const file of [...migrations, 'tests/browser/seed-local.sql']) {
+            const result = spawnSync(process.execPath, ['--import', './scripts/sites-env.mjs', './node_modules/wrangler/bin/wrangler.js', 'd1', 'execute', 'DB', '--local', '--config', config, '--persist-to', '.wrangler/state', '--file', file], { stdio: 'inherit' });
+            assert.equal(result.status, 0, `Local migration failed: ${file}`);
+          }
+          NODE
+      - name: Start built worker and run real browser checks
+        run: |
+          pnpm run start --port 8787 > qa-artifacts/worker.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          READY=0
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent "$SWAY_QA_BASE_URL/api/open-retailers" > /dev/null; then READY=1; break; fi
+            if ! kill -0 "$SERVER_PID" 2>/dev/null; then cat qa-artifacts/worker.log; exit 1; fi
+            sleep 2
+          done
+          if [ "$READY" -ne 1 ]; then cat qa-artifacts/worker.log; echo 'Built worker did not become ready'; exit 1; fi
+          node tests/browser/public-smoke.mjs | tee qa-artifacts/browser.log
+      - name: Preserve evidence even on failure
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-redesign-${{ github.run_id }}
+          path: qa-artifacts/
+          retention-days: 7
+          if-no-files-found: warn
