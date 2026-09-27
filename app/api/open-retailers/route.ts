@@ -1,3 +1,12 @@
 import { database } from "@/lib/server";
-export const dynamic="force-dynamic";
-export async function GET(){try{const db=database();const result=await db.prepare(`SELECT s.id,s.name,s.city,s.state,s.type,s.description FROM stores s WHERE s.status='published' AND s.capacity>(SELECT COUNT(*) FROM requests r WHERE r.store_id=s.id AND r.status='confirmed') ORDER BY s.state,s.city,s.name`).all();return Response.json({stores:result.results},{headers:{"Cache-Control":"public, max-age=60"}})}catch(e){console.error("public_open_retailers_failed",e);return Response.json({stores:[]},{status:503})}}
+import { publicStoresQuery } from "@/lib/public-network";
+export const dynamic = "force-dynamic";
+export async function GET() {
+  try {
+    const result = await database().prepare(publicStoresQuery).all();
+    return Response.json({ stores: result.results }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    console.error("public_open_retailers_failed", error);
+    return Response.json({ error: "Retailer availability is temporarily unavailable." }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
+}

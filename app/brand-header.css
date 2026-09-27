@@ -1,0 +1,21 @@
+/* The repository logo is already a wide transparent asset. Old offsets cropped
+   the SWAY lettering and TV. Fit the complete asset in both header variants. */
+header a[aria-label="SWAY IRL home"] {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 154px;
+  height: 54px;
+  overflow: visible;
+}
+header a[aria-label="SWAY IRL home"] > img {
+  position: static;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  margin: 0;
+  object-fit: contain;
+  mix-blend-mode: normal;
+}
