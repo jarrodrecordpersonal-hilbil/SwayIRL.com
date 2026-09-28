@@ -70,7 +70,12 @@ try {
     await page.setViewportSize({ width, height: 1000 });
     for (const route of routes) await check(`built route ${route} at ${width}px`, async () => {
       await visit(page, route);
-      if (route === '/' || route === '/open-retailers') await visible(page, 'QA Cedar Market');
+      if (route === '/open-retailers') await visible(page, 'QA Cedar Market');
+      if (route === '/') {
+        const choices = page.locator('#partners');
+        for (const slug of sheets) assert.equal(await choices.locator(`a[href="/sales-sheets/${slug}"]`).count(), 1);
+        assert.equal(await page.locator('main section').count(), 3, 'Keep the homepage focused on intro, audience choices, and a short explanation');
+      }
       const dimensions = await page.evaluate(() => ({ width: innerWidth, scroll: document.documentElement.scrollWidth, broken: [...document.images].filter(image => !image.complete || image.naturalWidth === 0).map(image => image.src) }));
       assert.ok(dimensions.scroll <= dimensions.width + 1, JSON.stringify(dimensions));
       assert.deepEqual(dimensions.broken, [], 'Repository PNG assets must load, not placeholders');
@@ -103,7 +108,8 @@ try {
     await page.setViewportSize({ width: 390, height: 844 }); await visit(page, '/');
     await page.locator('header summary').click();
     const nav = page.getByRole('navigation', { name: 'Mobile navigation', exact: true });
-    for (const label of ['How it works', 'Open retailers', 'Sales sheets', 'SWAY Boost', 'Log in', 'Join SWAY']) assert.ok(await nav.getByRole('link', { name: label, exact: true }).isVisible());
+    for (const label of ['Open retailers', 'Sales sheets', 'Log in', 'Join SWAY']) assert.ok(await nav.getByRole('link', { name: label, exact: true }).isVisible());
+    assert.ok(await page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link', { name: 'SWAY Boost', exact: true }).isVisible());
     await nav.getByRole('link', { name: 'Sales sheets', exact: true }).click();
     await page.waitForURL('**/sales-sheets'); assert.equal(await page.locator('main h1').count(), 1);
   });

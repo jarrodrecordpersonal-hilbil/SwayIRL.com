@@ -5,7 +5,7 @@ import { salesSheets, salesPitch, type SalesSheet } from "../lib/public-sales";
 import { filterPublicStores, parsePublicStores, type PublicStore } from "../lib/public-network";
 import s from "./public-experience.module.css";
 
-const links = [["How it works", "/#how-it-works"], ["Open retailers", "/open-retailers"], ["Sales sheets", "/sales-sheets"], ["SWAY Boost", "/boost"]] as const;
+const links = [["Open retailers", "/open-retailers"], ["Sales sheets", "/sales-sheets"]] as const;
 const Arrow = () => <span aria-hidden="true">↗</span>;
 function LinkButton({ href, children, secondary = false }: { href: string; children: ReactNode; secondary?: boolean }) {
   return <a className={`${s.button} ${secondary ? s.secondary : ""}`} href={href}>{children}<Arrow /></a>;
@@ -16,11 +16,11 @@ export function PublicShell({ children }: { children: ReactNode }) {
     <header className={s.header}><div className={s.headerInner}>
       <a className={s.brand} href="/" aria-label="SWAY IRL home"><img src="/brand.png" alt="SWAY IRL" /></a>
       <nav className={s.desktopNav} aria-label="Main navigation">{links.map(([label, href]) => <a href={href} key={href}>{label}</a>)}</nav>
-      <div className={s.headerActions}><a className={s.login} href="/login">Log in</a><LinkButton href="/join">Join SWAY</LinkButton></div>
+      <div className={s.headerActions}><a className={s.login} href="/login">Log in <Arrow /></a></div>
       <details className={s.mobileMenu}><summary>Menu <span aria-hidden="true">+</span></summary><nav aria-label="Mobile navigation">{links.map(([label, href]) => <a href={href} key={href}>{label}</a>)}<a href="/login">Log in</a><a href="/join">Join SWAY</a></nav></details>
     </div></header>
     <main id="main-content">{children}</main>
-    <footer className={s.footer}><div><a href="/" className={s.wordmark}>SWAY IRL</a><p>Influence where people buy.</p></div><nav aria-label="Footer navigation">{links.slice(1).map(([label, href]) => <a key={href} href={href}>{label}</a>)}<a href="/privacy">Privacy</a></nav><p className={s.fine}>Proposed launch terms. Commercial agreements and campaign activation are confirmed with the SWAY team.</p></footer>
+    <footer className={s.footer}><div><a href="/" className={s.wordmark}>SWAY IRL</a><p>Influence where people buy.</p></div><nav aria-label="Footer navigation">{links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}<a href="/boost">SWAY Boost</a><a href="/privacy">Privacy</a></nav><p className={s.fine}>Proposed launch terms. Commercial agreements and campaign activation are confirmed with the SWAY team.</p></footer>
   </div>;
 }
 function Heading({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
@@ -28,33 +28,26 @@ function Heading({ eyebrow, title, children }: { eyebrow: string; title: string;
 }
 export function HomeExperience() {
   return <PublicShell>
-    <section className={s.hero}><div className={s.heroInner}><div>
-      <p className={s.eyebrow}>CREATOR-LED. IN-STORE. IN REAL LIFE.</p>
+    <section className={`${s.hero} ${s.homeHero}`}><div className={s.heroInner}><div>
+      <p className={s.eyebrow}>INFLUENCE. IN REAL LIFE.</p>
       <h1>Influence where<br /><em>people buy.</em></h1>
-      <p className={s.heroIntro}>Creator-powered media inside retail stores. Put product stories where discovery can become a purchase.</p>
-      <div className={s.actions}><LinkButton href="/open-retailers">View open retailers</LinkButton><LinkButton href="/sales-sheets" secondary>View sales sheets</LinkButton></div>
-      <p className={s.heroNote}>Explore first. No account required to browse.</p>
-    </div><figure className={s.heroVisual}><img src="/retail-scene.png" alt="Illustrative concept of creator content on a screen inside a retail store" /><div className={s.imageLabel}>FROM THE FEED TO THE FLOOR</div><figcaption><strong>Your story.<br />Their next discovery.</strong><span>Retail concept image · not a confirmed location</span></figcaption></figure></div></section>
-    <section className={`${s.section} ${s.rolesSection}`}><div className={s.wrap}>
-      <Heading eyebrow="FOUR WAYS IN. ONE NETWORK." title="Choose your side."><p>A clear next step for every partner.</p></Heading>
-      <div className={s.roleGrid}>{salesSheets.map((sheet, index) => <article className={s.roleCard} data-accent={index} key={sheet.slug}>
-        <p className={s.eyebrow}>{sheet.audience}</p><h3>{sheet.headline}</h3><ul>{sheet.benefits.map((benefit) => <li key={benefit}>{benefit}</li>)}</ul>
-        <a className={s.cardLink} href={`/sales-sheets/${sheet.slug}`}>{sheet.audience === "Brands" ? "Explore placements" : sheet.action}<Arrow /></a>
-      </article>)}</div>
+      <p className={s.heroIntro}>Creator videos on store TVs. Helping shoppers discover products right where they buy.</p>
+      <a className={s.heroPath} href="#partners">Find your place in SWAY <span aria-hidden="true">↓</span></a>
+    </div><figure className={s.heroVisual}><img src="/retail-scene.png" alt="Concept illustration of creator videos playing on a retail store TV" /><figcaption>Illustrative store setup</figcaption></figure></div></section>
+    <section className={s.partnerSection} id="partners"><div className={s.wrap}>
+      <h2>How will you use SWAY?</h2>
+      <div className={s.pathGrid}>{[
+        { slug: "retailers", label: "Retailers", text: "Host a screen. Promote your store. Earn ad revenue." },
+        { slug: "brands", label: "Brands", text: "Put your products in front of shoppers." },
+        { slug: "distributors", label: "Distributors", text: "Connect your brands and stores. Earn referral revenue." },
+        { slug: "influencers", label: "Creators", text: "Bring your influence into stores." },
+      ].map((path) => <a className={s.pathCard} href={`/sales-sheets/${path.slug}`} key={path.slug}>
+        <div><h3>{path.label}</h3><Arrow /></div><p>{path.text}</p>
+      </a>)}</div>
     </div></section>
-    <section className={s.section}><div className={s.wrap}>
-      <Heading eyebrow="FIND YOUR NEXT MARKET" title="Open retailers."><LinkButton href="/open-retailers" secondary>Browse the network</LinkButton></Heading>
-      <p className={s.sectionIntro}>Published locations currently accepting placement requests. Availability, not inventory counts.</p><RetailerBrowser compact />
+    <section className={s.homeExplainer} id="how-it-works"><div className={s.wrap}>
+      <h2>How it works.</h2><p>Brands bring the products. Creators tell the story. SWAY brings it to screens where people shop.</p>
     </div></section>
-    <section className={`${s.section} ${s.softSection}`} id="how-it-works"><div className={s.wrap}>
-      <Heading eyebrow="FROM CONTENT TO THE SHOPPING MOMENT" title="Simple on purpose." />
-      <ol className={s.steps}>{[["Create", "Build a clear product story with the right creative."], ["Place", "Choose retailers. Agree the campaign and available positions."], ["Show up", "Run approved content where people shop."], ["Measure", "Agree the reporting and any available POS attribution before launch."]].map(([title, text], i) => <li key={title}><span className={s.number}>0{i + 1}</span><h3>{title}</h3><p>{text}</p></li>)}</ol>
-    </div></section>
-    <BoostBlock />
-    <section className={s.section}><div className={s.wrap}><Heading eyebrow="OPEN IT. READ IT. SHARE IT." title="The sales toolkit."><LinkButton href="/sales-sheets" secondary>All sales sheets</LinkButton></Heading>
-      <div className={s.toolkit}>{salesSheets.map((sheet) => <a className={s.toolkitRow} key={sheet.slug} href={`/sales-sheets/${sheet.slug}`}><span><strong>{sheet.audience} sales sheet</strong><small>View, copy the pitch, or print / save as PDF.</small></span><Arrow /></a>)}</div>
-    </div></section>
-    <section className={s.closing}><p className={s.eyebrow}>YOUR NEXT MOVE</p><h2>Get your story<br /><em>into the real world.</em></h2><div className={s.actions}><LinkButton href="/open-retailers">Find a retailer</LinkButton><LinkButton href="/join?role=retailer" secondary>Add my store</LinkButton></div></section>
   </PublicShell>;
 }
 
