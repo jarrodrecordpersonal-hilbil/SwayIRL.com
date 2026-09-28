@@ -10,17 +10,23 @@ const Arrow = () => <span aria-hidden="true">↗</span>;
 function LinkButton({ href, children, secondary = false }: { href: string; children: ReactNode; secondary?: boolean }) {
   return <a className={`${s.button} ${secondary ? s.secondary : ""}`} href={href}>{children}<Arrow /></a>;
 }
-export function PublicShell({ children }: { children: ReactNode }) {
-  return <div className={s.site}>
-    <a className={s.skip} href="#main-content">Skip to content</a>
-    <header className={s.header}><div className={s.headerInner}>
+export function PublicHeader() {
+  return <header className={`${s.site} ${s.header}`}><div className={s.headerInner}>
       <a className={s.brand} href="/" aria-label="SWAY IRL home"><img src="/brand.png" alt="SWAY IRL" /></a>
       <nav className={s.desktopNav} aria-label="Main navigation">{links.map(([label, href]) => <a href={href} key={href}>{label}</a>)}</nav>
       <div className={s.headerActions}><a className={s.login} href="/login">Log in <Arrow /></a></div>
       <details className={s.mobileMenu}><summary>Menu <span aria-hidden="true">+</span></summary><nav aria-label="Mobile navigation">{links.map(([label, href]) => <a href={href} key={href}>{label}</a>)}<a href="/login">Log in</a><a href="/join">Join SWAY</a></nav></details>
-    </div></header>
+    </div></header>;
+}
+export function PublicFooter() {
+  return <footer className={`${s.site} ${s.footer}`}><div><a href="/" className={s.wordmark}>SWAY IRL</a><p>Influence where people buy.</p></div><nav aria-label="Footer navigation">{links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}<a href="/boost">SWAY Boost</a><a href="/privacy">Privacy</a></nav><p className={s.fine}>Proposed launch terms. Commercial agreements and campaign activation are confirmed with the SWAY team.</p></footer>;
+}
+export function PublicShell({ children }: { children: ReactNode }) {
+  return <div className={s.site}>
+    <a className={s.skip} href="#main-content">Skip to content</a>
+    <PublicHeader />
     <main id="main-content">{children}</main>
-    <footer className={s.footer}><div><a href="/" className={s.wordmark}>SWAY IRL</a><p>Influence where people buy.</p></div><nav aria-label="Footer navigation">{links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}<a href="/boost">SWAY Boost</a><a href="/privacy">Privacy</a></nav><p className={s.fine}>Proposed launch terms. Commercial agreements and campaign activation are confirmed with the SWAY team.</p></footer>
+    <PublicFooter />
   </div>;
 }
 function Heading({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
@@ -97,18 +103,19 @@ function CopyPitch({ sheet }: { sheet: SalesSheet }) {
   return <div className={s.copyArea}><button type="button" className={`${s.button} ${s.secondary}`} onClick={() => void copy()}>Copy pitch</button><span role="status" className={s.copyStatus}>{state === "copied" ? "Pitch copied." : ""}</span>{state === "manual" && <label className={s.manualCopy}>Clipboard unavailable. Select and copy this pitch:<textarea readOnly value={pitch} rows={5} onFocus={(e) => e.currentTarget.select()} /></label>}</div>;
 }
 export function SalesLibraryExperience() {
-  return <PublicShell><section className={s.pageIntro}><div className={s.wrap}><p className={s.eyebrow}>THE PUBLIC SALES TOOLKIT</p><h1>A clear pitch.<br /><em>For every partner.</em></h1><p>Open a one-page sheet. Copy the pitch. Print or save as PDF. No account or payment required.</p></div></section><section className={s.section}><div className={s.wrap}><div className={s.libraryGrid}>{salesSheets.map((sheet, i) => <article className={s.libraryCard} data-accent={i} key={sheet.slug}><p className={s.eyebrow}>{sheet.audience} · ONE-PAGE OVERVIEW</p><h2>{sheet.headline}</h2><p>{sheet.intro}</p><div className={s.miniOffer}><strong>{sheet.offer}</strong><span>{sheet.offerLabel}</span></div><div className={s.actions}><LinkButton href={`/sales-sheets/${sheet.slug}`}>View sheet</LinkButton><CopyPitch sheet={sheet} /></div></article>)}</div><div className={s.related}><div><strong>Need product to move faster?</strong><p>Explore SWAY Boost: a separately scoped campaign service.</p></div><LinkButton href="/boost" secondary>Explore SWAY Boost</LinkButton></div></div></section></PublicShell>;
+  return <PublicShell><section className={`${s.pageIntro} ${s.compactIntro}`}><div className={s.wrap}><p className={s.eyebrow}>SALES SHEETS</p><h1>Choose your one-pager.</h1><p>Read it, share it, or save a PDF. No login needed.</p></div></section><section className={s.sheetIndexSection}><div className={s.sheetIndex}>{salesSheets.map((sheet) => <a className={s.sheetIndexRow} key={sheet.slug} href={`/sales-sheets/${sheet.slug}`}><div><h2>{sheet.audience}</h2><p>{sheet.headline}</p></div><span>View sheet <Arrow /></span></a>)}</div></section></PublicShell>;
 }
 export function SalesSheetExperience({ sheet }: { sheet: SalesSheet }) {
   return <PublicShell><div className={`${s.wrap} ${s.sheetWrapper}`}><div className={s.sheetControls}><a href="/sales-sheets">← All sales sheets</a><div className={s.actions}><CopyPitch sheet={sheet} /><button className={s.button} type="button" onClick={() => window.print()}>Print / Save PDF</button></div></div><article className={s.paper}>
     <div className={s.paperMasthead}><strong>SWAY IRL</strong><span>{sheet.audience} partner program</span></div>
     <p className={s.eyebrow}>INFLUENCE WHERE PEOPLE BUY.</p><h1>{sheet.headline}</h1><p className={s.paperIntro}>{sheet.intro}</p>
     <div className={s.paperOffer}><strong>{sheet.offer}</strong><p>{sheet.offerLabel}</p></div>
+    <div className={s.sheetLeadAction}><LinkButton href={sheet.slug === "brands" ? "/open-retailers" : `/join?role=${sheet.role}`}>{sheet.action}</LinkButton></div>
     <section className={s.paperSection}><h2>What you get</h2><ul>{sheet.benefits.map((benefit) => <li key={benefit}>{benefit}</li>)}</ul></section>
     <section className={s.paperSection}><h2>How it works</h2><ol>{sheet.steps.map((step) => <li key={step}>{step}</li>)}</ol></section>
     <section className={s.paperTerms}><h2>Before we launch</h2><p>{sheet.terms}</p></section>
     <div className={s.paperFooter}><strong>SWAY IRL · {sheet.audience}</strong><span>Proposed terms · Confirmed by agreement</span></div>
-  </article><div className={s.sheetCta}><LinkButton href={sheet.slug === "brands" ? "/open-retailers" : `/join?role=${sheet.role}`}>{sheet.action}</LinkButton><p className={s.fine}>Reading and sharing this sheet is free. Joining is a separate next step.</p></div></div></PublicShell>;
+  </article></div></PublicShell>;
 }
 function BoostBlock({ showLink = true }: { showLink?: boolean }) {
   return <section className={s.boost}><div className={s.wrap}><div className={s.boostGrid}><div><p className={s.eyebrow}>SWAY BOOST · OPTIONAL CAMPAIGN SERVICE</p><h2>Need product to move?<br /><em>Turn up the market.</em></h2><p>Focus attention where inventory needs support—with the goal of faster sell-through, reorders, and capital freed for what comes next.</p>{showLink && <LinkButton href="/boost">Explore SWAY Boost</LinkButton>}</div><ol>{[["Pick the market", "Focus on selected retailers and products."], ["Add frequency", "Scope extra exposure without reducing agreed base placements."], ["Plan the offer", "Agree retailer-controlled QR offers or stock-based reductions where supported."], ["Agree the measurement", "Define available POS data, attribution, and the comparison baseline."]].map(([title, body], i) => <li key={title}><span>0{i + 1}</span><div><h3>{title}</h3><p>{body}</p></div></li>)}</ol></div><p className={s.boostFine}>Separately quoted. Offers, integrations, and measurement are scoped per campaign; no automated POS integration or guaranteed sales lift is promised.</p></div></section>;

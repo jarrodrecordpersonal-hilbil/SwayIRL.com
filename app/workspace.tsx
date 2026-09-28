@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Toaster, toast } from "sonner";
 import { SiteHeader, SiteFooter } from "./marketing";
+import { RetailerPlayerNote } from "./retailer-player-note";
 import { roles, roleLabels, stages, money, type Role, type WorkspaceData, type StoreRecord, type Lead, type Partner, type PlacementRequest } from "@/lib/types";
 import { applicationFields, nextSteps, parseApplication, applicationStatus, creatorBonus } from "@/lib/onboarding";
 import type { ChatGPTUser } from "./chatgpt-auth";
@@ -50,6 +51,7 @@ export function ProfileForm({user,profile,initialRole,onSaved,joining=false}:{us
       <Field label="Anything else we should know? (optional)" full><Textarea name="notes" maxLength={3000} rows={3} defaultValue={profile?.notes}/></Field>
     </div></fieldset>
     {role==="influencer"?<div className="notice"><strong>{creatorBonus.short}</strong><details className="bonus-details"><summary>How the proposed bonus works</summary><p>{creatorBonus.detail}</p><p>Example: $10,000 in qualifying incremental net product sales would mean $500 at 5%, or $1,000 at 10%. Illustrative only; no earnings are guaranteed.</p></details></div>:role==="brand"?<p className="notice"><strong>$120 per store / month.</strong> One recurring 15-second brand spot. Creator production and optional SWAY Boost are quoted separately.</p>:role==="distributor"?<p className="notice"><strong>10% of referred-brand ad revenue</strong> while qualifying placements stay active. Referral attribution and payout terms are agreed before launch.</p>:<p className="notice"><strong>25% of your store’s ad revenue, plus free store promotion.</strong> Four 15-second store ads in every rotation. Placement, setup, and operating terms are agreed before activation.</p>}
+    {role==="retailer"&&<RetailerPlayerNote/>}
     <p className="fineprint" style={{marginBottom:20}}>We use this information to review your application and follow up. See our <a className="underlined" href="/privacy">privacy information</a>. Submitting creates no paid commitment or content license.</p>
     <Button disabled={busy} type="submit">{busy?"Saving…":joining?"Submit application":"Save application"}<ArrowRight size={16}/></Button>
   </form>;

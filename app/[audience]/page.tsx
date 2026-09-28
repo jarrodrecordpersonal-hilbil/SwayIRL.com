@@ -1,4 +1,13 @@
 import { notFound } from "next/navigation";
-import { MarketingPage, audiences } from "../marketing";
-export async function generateMetadata({params}:{params:Promise<{audience:string}>}) { const {audience}=await params; const a=audiences[audience]; return {title:a ? `${a.label} | SWAY IRL` : "SWAY IRL"}; }
-export default async function Audience({params}:{params:Promise<{audience:string}>}) {const {audience}=await params; if(!audiences[audience]) notFound(); return <MarketingPage audience={audience}/>;}
+import { findSalesSheet } from "../../lib/public-sales";
+import { SalesSheetExperience } from "../public-experience";
+type Props = { params: Promise<{ audience: string }> };
+export async function generateMetadata({ params }: Props) {
+  const sheet = findSalesSheet((await params).audience);
+  return { title: sheet ? `${sheet.audience} | SWAY IRL` : "SWAY IRL" };
+}
+export default async function Audience({ params }: Props) {
+  const sheet = findSalesSheet((await params).audience);
+  if (!sheet) notFound();
+  return <SalesSheetExperience sheet={sheet} />;
+}
