@@ -19,7 +19,7 @@ export function PublicHeader() {
     </div></header>;
 }
 export function PublicFooter() {
-  return <footer className={`${s.site} ${s.footer}`}><div><a href="/" className={s.wordmark}>SWAY IRL</a><p>Influence where people buy.</p></div><nav aria-label="Footer navigation">{links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}<a href="/boost">SWAY Boost</a><a href="/privacy">Privacy</a></nav><p className={s.fine}>Proposed launch terms. Commercial agreements and campaign activation are confirmed with the SWAY team.</p></footer>;
+  return <footer className={`${s.site} ${s.footer}`}><div><a href="/" className={s.wordmark}>SWAY IRL</a><p>Influence where people buy.</p></div><nav aria-label="Footer navigation">{links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}<a href="/boost">SWAY Boost</a><a href="/privacy">Privacy</a><a href="https://mixxgroup.com">MIXX Group ↗</a></nav><p className={s.fine}>Proposed launch terms. Commercial agreements and campaign activation are confirmed with the SWAY team.</p></footer>;
 }
 export function PublicShell({ children }: { children: ReactNode }) {
   return <div className={s.site}>
